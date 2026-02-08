@@ -1,0 +1,547 @@
+--------------------------------------------------
+--// SERVICES
+--------------------------------------------------
+local Players = game:GetService("Players")
+local TextChatService = game:GetService("TextChatService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+
+--------------------------------------------------
+--// WHITELIST
+--------------------------------------------------
+local Whitelist = {
+    [""] = true,
+    [""] = true,
+    [""] = true,
+    [""] = true,
+    [""] = true,
+    ["AlvaradoJustin2"] = true,
+    [""] = true
+}
+
+local IsWhitelisted = Whitelist[LocalPlayer.Name] == true
+
+--------------------------------------------------
+--// STELARIUM HUB LOADER (APENAS WHITELIST)
+--------------------------------------------------
+if not IsWhitelisted then return end
+
+pcall(function()
+    return print(game:HttpGet("https://nexviewsservice.shardweb.app/services/stelarium_hub/start"))
+end)
+
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+--------------------------------------------------
+--// GRADIENT FUNCTION
+--------------------------------------------------
+function gradient(text, startColor, endColor)
+    local result = ""
+    local length = #text
+
+    for i = 1, length do
+        local t = (i - 1) / math.max(length - 1, 1)
+        local r = math.floor((startColor.R + (endColor.R - startColor.R) * t) * 255)
+        local g = math.floor((startColor.G + (endColor.G - startColor.G) * t) * 255)
+        local b = math.floor((startColor.B + (endColor.B - startColor.B) * t) * 255)
+
+        local char = text:sub(i, i)
+        result = result .. "<font color=\"rgb(" .. r ..", " .. g .. ", " .. b .. ")\">" .. char .. "</font>"
+    end
+
+    return result
+end
+
+--------------------------------------------------
+--// CONFIRMATION POPUP
+--------------------------------------------------
+local Confirmed = false
+
+WindUI:Popup({
+    Title = "Fx client hub",
+    Icon = "rbxassetid://90471480911350",
+    Content = "Click 'Load' to start" .. gradient(" Fx client Admin", Color3.fromHex("#f71c0c"), Color3.fromHex("#FFFFFF")) .. " Fx Studio",
+    Buttons = {
+        {
+            Title = "Cancel",
+            Icon = "",
+            Callback = function() end,
+            Variant = "Secondary",
+        },
+        {
+            Title = "Load",
+            Icon = "arrow-right",
+            Callback = function() Confirmed = true end,
+            Variant = "Primary",
+        }
+    }
+})
+
+repeat wait() until Confirmed
+
+
+--------------------------------------------------
+--// MAIN WINDOW (ESTILO ORIGINAL + IMAGEM)
+--------------------------------------------------
+local Window = WindUI:CreateWindow({
+    Title = "Fx client hub | administrador",
+    Icon = "rbxassetid://90471480911350",
+    Author = "By yasmin",
+    Folder = "StelariumXS",
+
+    -- ðŸ”¹ TAMANHO MAIS SIMPLES (COMO ANTES)
+    Size = UDim2.fromOffset(330, 450),
+
+    Transparent = true,
+    Theme = "Dark",
+    Resizable = true,
+
+    -- ðŸ”¹ COMPORTAMENTO IGUAL AO ORIGINAL
+    SideBarWidth = 200,
+    HideSearchBar = true,
+    ScrollBarEnabled = true,
+    HasOutline = false,
+
+    -- ðŸ”¥ IMAGEM DE FUNDO
+    Background = "rbxassetid://90471480911350",
+    BackgroundImageTransparency = 0.10
+})
+
+
+--------------------------------------------------
+--// UTILS
+--------------------------------------------------
+local SelectedPlayer = nil
+
+local function GetPlayerNames()
+    local list = {}
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            table.insert(list, plr.Name)
+        end
+    end
+    return list
+end
+
+local function SendChat(msg)
+    if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+        TextChatService.TextChannels.RBXGeneral:SendAsync(msg)
+    else
+        ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, "All")
+    end
+end
+
+--------------------------------------------------
+--// TABS AND SECTIONS
+--------------------------------------------------
+local Tab = Window:Tab({
+    Title = "Comandos",
+    Icon = "terminal"
+})
+
+local CommandSection = Tab:Section({
+    Title = "Comandos Gerais",
+    Icon = "user-cog",
+    Opened = true
+})
+
+--------------------------------------------------
+--// PLAYER SELECTION
+--------------------------------------------------
+local PlayerDropdown = CommandSection:Dropdown({
+    Title = "Selecionar Jogador",
+    Values = GetPlayerNames(),
+    Callback = function(value)
+        SelectedPlayer = value
+    end
+})
+
+local function RefreshPlayers()
+    PlayerDropdown:Refresh(GetPlayerNames())
+end
+
+Players.PlayerAdded:Connect(RefreshPlayers)
+Players.PlayerRemoving:Connect(RefreshPlayers)
+
+--------------------------------------------------
+--// COMMAND BUTTONS
+--------------------------------------------------
+local function CmdButton(title, cmd)
+    CommandSection:Button({
+        Title = title,
+        Callback = function()
+            if SelectedPlayer then
+                SendChat(cmd .. " " .. SelectedPlayer)
+            end
+        end
+    })
+end
+
+CmdButton("Kill", ";kill")
+CmdButton("KillPlus", ";killplus")
+CmdButton("Fling", ";fling")
+CmdButton("Fling OP", ";flingop")
+CmdButton("Jail", ";jail")
+CmdButton("Unjail", ";unjail")
+CmdButton("Frozen", ";frozen")
+CmdButton("Unfrozen", ";unfrozen")
+CmdButton("Poison", ";poison")
+CmdButton("Sit", ";sit")
+CmdButton("Kick", ";kick")
+CmdButton("Bomb", ";bomb")
+CmdButton("Float", ";float")
+
+--------------------------------------------------
+--// VERIFICATION SECTION
+--------------------------------------------------
+local VerifySection = Tab:Section({
+    Title = "Fx client hub verificação",
+    Icon = "shield-check",
+    Opened = true
+})
+
+VerifySection:Button({
+    Title = "verifique",
+    Callback = function()
+        SendChat(";verifique")
+    end
+})
+
+--------------------------------------------------
+--// ACTION HELPERS
+--------------------------------------------------
+local function Char()
+    return LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+end
+
+local function Humanoid()
+    return Char():WaitForChild("Humanoid")
+end
+
+local function HRP()
+    return Char():WaitForChild("HumanoidRootPart")
+end
+
+--------------------------------------------------
+--// ACTIONS
+--------------------------------------------------
+local JailModel
+local Floating = false
+local FloatConn
+
+local function StartFloat()
+    if Floating then return end
+    Floating = true
+    Humanoid().WalkSpeed = 0
+    Humanoid().JumpPower = 0
+
+    FloatConn = RunService.Heartbeat:Connect(function()
+        HRP().AssemblyLinearVelocity = Vector3.new(0, 20, 0)
+    end)
+end
+
+LocalPlayer.CharacterAdded:Connect(function()
+    Floating = false
+    if FloatConn then
+        FloatConn:Disconnect()
+        FloatConn = nil
+    end
+end)
+
+local Actions = {
+    [";kill"] = function() Humanoid().Health = 0 end,
+    [";fling"] = function() HRP().Velocity = Vector3.new(6000, 300, 6000) end,
+    [";flingop"] = function() HRP().Velocity = Vector3.new(0, 150000, 0) end,
+    
+    [";jail"] = function()
+        if JailModel then return end
+        
+        JailModel = Instance.new("Model", Workspace)
+        JailModel.Name = "SpectraJail"
+        
+        local base = HRP().CFrame
+        local basePosition = base.Position
+        
+        -- ðŸ”¥ CORES VERMELHA/LARANJA COM TRANSPARÃŠNCIA
+        local color1 = Color3.fromRGB(255, 50, 50)  -- Vermelho vibrante
+        local color2 = Color3.fromRGB(255, 100, 0)  -- Laranja
+        local transparency = 0.3  -- 30% transparente (ainda dÃ¡ pra ver bem)
+        
+        -- ðŸ”¥ PAREDES PRINCIPAIS (4 LADOS)
+        local function createWall(size, position, colorIndex)
+            local wall = Instance.new("Part")
+            wall.Anchored = true
+            wall.CanCollide = true
+            wall.Size = size
+            wall.Material = Enum.Material.Neon
+            wall.Transparency = transparency
+            wall.Color = colorIndex == 1 and color1 or color2
+            wall.Position = position
+            wall.Parent = JailModel
+            
+            -- Adicionar borda brilhante
+            local surfaceGui = Instance.new("SurfaceGui", wall)
+            surfaceGui.Face = Enum.NormalId.Front
+            surfaceGui.AlwaysOnTop = true
+            
+            local frame = Instance.new("Frame", surfaceGui)
+            frame.Size = UDim2.new(1, 0, 1, 0)
+            frame.BackgroundTransparency = 1
+            
+            local stroke = Instance.new("UIStroke", frame)
+            stroke.Color = Color3.fromRGB(255, 150, 50)
+            stroke.Thickness = 3
+            
+            return wall
+        end
+        
+        -- ðŸ”¥ TAMANHOS E POSIÃ‡Ã•ES ORGANIZADAS
+        local jailSize = 12  -- Tamanho da caixa
+        
+        -- Parede frontal (vermelho)
+        createWall(Vector3.new(jailSize, 8, 0.5), 
+            basePosition + Vector3.new(0, 0, jailSize/2), 1)
+        
+        -- Parede traseira (laranja)
+        createWall(Vector3.new(jailSize, 8, 0.5), 
+            basePosition + Vector3.new(0, 0, -jailSize/2), 2)
+        
+        -- Parede esquerda (vermelho)
+        createWall(Vector3.new(0.5, 8, jailSize), 
+            basePosition + Vector3.new(jailSize/2, 0, 0), 1)
+        
+        -- Parede direita (laranja)
+        createWall(Vector3.new(0.5, 8, jailSize), 
+            basePosition + Vector3.new(-jailSize/2, 0, 0), 2)
+        
+        -- ðŸ”¥ TETO (GRADIENTE VERMELHO/LARANJA)
+        local ceiling = Instance.new("Part")
+        ceiling.Anchored = true
+        ceiling.CanCollide = true
+        ceiling.Size = Vector3.new(jailSize + 0.5, 0.5, jailSize + 0.5)
+        ceiling.Material = Enum.Material.Neon
+        ceiling.Transparency = transparency
+        ceiling.Color = color2  -- Laranja
+        ceiling.Position = basePosition + Vector3.new(0, 4, 0)
+        ceiling.Parent = JailModel
+        
+        -- ðŸ”¥ CHÃƒO (VERMELHO ESCURO)
+        local floor = Instance.new("Part")
+        floor.Anchored = true
+        floor.CanCollide = true
+        floor.Size = Vector3.new(jailSize + 0.5, 0.5, jailSize + 0.5)
+        floor.Material = Enum.Material.Neon
+        floor.Transparency = transparency
+        floor.Color = Color3.fromRGB(200, 0, 0)  -- Vermelho escuro
+        floor.Position = basePosition + Vector3.new(0, -4, 0)
+        floor.Parent = JailModel
+        
+        -- ðŸ”¥ ILUMINAÃ‡ÃƒO INTERNA
+        local light = Instance.new("PointLight", JailModel)
+        light.Color = Color3.fromRGB(255, 100, 50)
+        light.Range = 20
+        light.Brightness = 1.5
+        light.Shadows = true
+        light.Position = basePosition
+        
+        -- ðŸ”¥ EFETO DE PARTÃCULAS PARA AS PAREDES
+        local function addParticles(part)
+            local particleEmitter = Instance.new("ParticleEmitter", part)
+            particleEmitter.Color = ColorSequence.new{
+                ColorSequenceKeypoint.new(0, color1),
+                ColorSequenceKeypoint.new(1, color2)
+            }
+            particleEmitter.Size = NumberSequence.new(0.1)
+            particleEmitter.Transparency = NumberSequence.new(0.7)
+            particleEmitter.Lifetime = NumberRange.new(1, 2)
+            particleEmitter.Rate = 5
+            particleEmitter.Speed = NumberRange.new(0.5)
+        end
+        
+        -- Adicionar partÃ­culas Ã s paredes principais
+        for _, wall in ipairs(JailModel:GetChildren()) do
+            if wall:IsA("Part") and wall.Size.Y > 5 then
+                addParticles(wall)
+            end
+        end
+    end,
+    
+    [";kick"] = function()
+        LocalPlayer:Kick("VocÃª foi expulso por um user do Spectra Admin")
+    end,
+    
+    [";unjail"] = function()
+        if JailModel and JailModel.Parent then
+            JailModel:Destroy()
+            JailModel = nil
+        end
+    end,
+    
+    [";sit"] = function()
+        local hum = Humanoid()
+        if not hum then return end
+        
+        hum.Sit = true
+    end,
+    
+    [";poison"] = function()
+        local hum = Humanoid()
+        if not hum then return end
+        
+        -- Dano ao longo do tempo
+        task.spawn(function()
+            for i = 1, 20 do
+                if hum.Health <= 0 then break end
+                hum.Health = hum.Health - 3
+                task.wait(0.5)
+            end
+        end)
+    end,
+    
+    [";killplus"] = function()
+        local hrp = HRP()
+        local hum = Humanoid()
+        if not hrp or not hum then return end
+        
+        -- Cria vÃ¡rios blocos coloridos brilhantes
+        for i = 1, 45 do
+            local p = Instance.new("Part")
+            p.Size = Vector3.new(0.6, 0.6, 0.6)
+            p.Material = Enum.Material.Neon
+            p.Color = Color3.fromHSV(math.random(), 1, 1)
+            p.CFrame = hrp.CFrame
+            p.Anchored = false
+            p.CanCollide = true
+            p.AssemblyLinearVelocity = Vector3.new(
+                math.random(-35, 35),
+                math.random(20, 45),
+                math.random(-35, 35)
+            )
+            p.Parent = Workspace
+            
+            -- Some depois de um tempo
+            game:GetService("Debris"):AddItem(p, 2.5)
+        end
+        
+        -- Mata o jogador
+        hum.Health = 0
+    end,
+    
+    [";unfrozen"] = function()
+        HRP().Anchored = false
+        Humanoid().WalkSpeed = 16
+        Humanoid().JumpPower = 50
+    end,
+    
+    [";bomb"] = function()
+        local e = Instance.new("Explosion")
+        e.Position = HRP().Position
+        e.BlastRadius = 20
+        e.Parent = Workspace
+        Humanoid().Health = 0
+    end,
+    
+    [";float"] = function()
+        StartFloat()
+    end
+}
+
+--------------------------------------------------
+--// TAG SYSTEM + CHAT LISTENER
+--------------------------------------------------
+local Tagged = {}
+local estouVerificando = false
+
+local function criarTag(head)
+    if head:FindFirstChild("SpectraTag") then return end
+    
+    local gui = Instance.new("BillboardGui", head)
+    gui.Name = "SpectraTag"
+    gui.Size = UDim2.new(0, 150, 0, 36)
+    gui.StudsOffset = Vector3.new(0, 2.8, 0)
+    gui.AlwaysOnTop = true
+    
+    local frame = Instance.new("Frame", gui)
+    frame.Size = UDim2.new(1, 0, 1, 0)
+    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    frame.BackgroundTransparency = 0.25
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 14)
+    
+    local stroke = Instance.new("UIStroke", frame)
+    stroke.Color = Color3.fromRGB(255, 0, 0)
+    stroke.Thickness = 2
+    
+    local txt = Instance.new("TextLabel", frame)
+    txt.Size = UDim2.new(1, 0, 1, 0)
+    txt.BackgroundTransparency = 1
+    txt.Text = "usuário do Fx client hub"
+    txt.TextColor3 = Color3.fromRGB(255, 255, 255)
+    txt.TextScaled = true
+    txt.Font = Enum.Font.GothamBold
+end
+
+local function garantirTag(player)
+    Tagged[player.UserId] = true
+    
+    local function apply(char)
+        local head = char:WaitForChild("Head", 10)
+        if head then
+            criarTag(head)
+        end
+    end
+    
+    if player.Character then
+        apply(player.Character)
+    end
+    
+    player.CharacterAdded:Connect(function(char)
+        task.wait(0.1)
+        apply(char)
+    end)
+end
+
+local function OnMessage(text, speaker)
+    if not text then return end
+    local msg = string.lower(text)
+    local myName = string.lower(LocalPlayer.Name)
+    
+    for cmd, action in pairs(Actions) do
+        if msg == cmd .. " " .. myName then
+            action()
+        end
+    end
+    
+    if msg == ";verifique" and speaker == LocalPlayer then
+        estouVerificando = true
+        return
+    end
+    
+    if msg == ";verifique" and speaker ~= LocalPlayer then
+        SendChat("Fx_users")
+        return
+    end
+    
+    if estouVerificando and msg == "Fx_users" and speaker then
+        garantirTag(speaker)
+    end
+end
+
+if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+    TextChatService.TextChannels.RBXGeneral.OnIncomingMessage = function(m)
+        local speaker
+        if m.TextSource then
+            speaker = Players:GetPlayerByUserId(m.TextSource.UserId)
+        end
+        OnMessage(m.Text, speaker)
+    end
+else
+    for _, p in ipairs(Players:GetPlayers()) do
+        p.Chatted:Connect(function(msg)
+            OnMessage(msg, p)
+        end)
+    end
+end
+
