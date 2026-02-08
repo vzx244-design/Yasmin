@@ -1,4 +1,4 @@
-
+loadstring(game:HttpGet("https://raw.githubusercontent.com/vzx244-design/Yasmin/refs/heads/main/Hubfxclienthub"))()
 
 local Players =game:GetService("Players")
 local TweenService = game:GetService("TweenService")
