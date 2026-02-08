@@ -1,8 +1,8 @@
-loadstring(game:HttpGet("https://raw.githubusercontent.com/pedrohenriquecarvalhofari-tech/lcc-hub-2026/refs/heads/main/painel%20adm%20lcc"))()
+loadst
 
 local Players =game:GetService("Players")
 local TweenService = game:GetService("TweenService")
-local CoreGui = game:GetService("CoreGui")
+local CoreGui = game:GetService("CoreGui"
 local StarterGui = game:GetService("StarterGui")
 local RunService = game:GetService("RunService")
 local lp = Players.LocalPlayer
